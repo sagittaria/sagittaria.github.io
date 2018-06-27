@@ -1,0 +1,2 @@
+webpackJsonp([1],{CM90:function(t,e,n){"use strict";Object.defineProperty(e,"__esModule",{value:!0});var i={render:function(){var t=this.$createElement;return(this._self._c||t)("div",[this._v(this._s(this.title))])},staticRenderFns:[]};var r=n("VU/8")({data:function(){return{title:"文章列表"}}},i,!1,function(t){n("jwD6")},"data-v-5ca53d6c",null);e.default=r.exports},jwD6:function(t,e){}});
+//# sourceMappingURL=1.c8873b88e398e9d1f7e2.js.map
