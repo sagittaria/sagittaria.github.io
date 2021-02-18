@@ -139,10 +139,11 @@ $(document).ready(function () {
   var isSidebarCouldDisplay = CONFIG.sidebar.display === 'post' ||
       CONFIG.sidebar.display === 'always';
   var hasTOC = $tocContent.length > 0 && $tocContent.html().trim().length > 0;
-  if (isSidebarCouldDisplay && hasTOC) {
-    CONFIG.motion ?
-      (NexT.motion.middleWares.sidebar = function () {
-          NexT.utils.displaySidebar();
-      }) : NexT.utils.displaySidebar();
-  }
+  // if (isSidebarCouldDisplay && hasTOC) {
+  //   CONFIG.motion ?
+  //     (NexT.motion.middleWares.sidebar = function () {
+  //         NexT.utils.displaySidebar();
+  //     }) : NexT.utils.displaySidebar();
+  // }
+  // 文章页默认不显示侧边栏(目录)
 });
