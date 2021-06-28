@@ -1807,7 +1807,7 @@ pre .javascript .function {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #ff5503;
+  background: #ffd0ab;
 }
 .links-of-blogroll {
   font-size: 13px;
@@ -2676,8 +2676,16 @@ hr {
 .use-motion .logo-line-after i {
   right: -100%;
 }
+.site-meta {
+  position: relative;
+}
 .site-subtitle {
-  display: none;
+  position: absolute !important;
+  left: 55px;
+  top: 13px;
+  margin: 0;
+  width: 200px;
+  font-size: 16px;
 }
 .site-nav-toggle {
   position: static;
