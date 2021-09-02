@@ -1,7 +1,7 @@
 ---
 title: 再出发
 date: 2021-08-21 13:21:29
-categories: 好望角
+categories: 通天塔
 tags: 经历
 ---
 
