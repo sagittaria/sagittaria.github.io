@@ -10,11 +10,11 @@ tags: 经历
 
 首先，很明显安全性会降低：数据库里随便改一行两行，所谓的安全控制直接就没了嘛。
 
-其次，业务上有时候会需要根据当前用户（的角色）来执行不同的操作，如员工只能看到自己创建的单据、领导能看到所有人的单据——类似于这种情况下如果角色是允许动态增删改的，那么程序的正常流转都无法独立于数据，要频繁从数据库里查角色来做分支判断。
+其次，业务上有时候会需要根据当前用户（的角色）来执行不同的操作，如员工只能看到自己创建的单据、领导能看到所有人的单据——类似于这种情况下如果角色是允许动态增删改的，那么程序的正常流转都无法独立于数据——因需做分支判断，查个列表竟然都要先获取下角色，显然是无法接受的。
 
-另外，SpringSecurity只负责管控“有没有权限”这一点，不应该切入到具体业务中。
+考虑到SpringSecurity只负责管控“有没有权限”这一点，不应该切入到具体业务中，我决定给用户加上”等级“来区分员工或领导，最终实现用security来控制能不能见到菜单、能不能调接口，用等级来控制能看到哪些数据。
 
-最后贴一下[原文](https://docs.spring.io/spring-security/reference/servlet/appendix/faq.html#appendix-faq-dynamic-url-metadata)
+最后贴一下 [原文](https://docs.spring.io/spring-security/reference/servlet/appendix/faq.html#appendix-faq-dynamic-url-metadata)
 
 ![How do I define the secured URLs within an application dynamically?](appendix-faq-dynamic-url-metadata.jpg)
 
