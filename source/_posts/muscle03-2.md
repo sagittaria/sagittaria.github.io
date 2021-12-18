@@ -1,5 +1,5 @@
 ---
-title: Security03-连接数据库验证用户名密码-实践
+title: Security03-连接数据库验证用户名密码-实践-思考题未完成
 date: 2021-12-16 09:39:52
 categories: 不周山
 tags: 把SpringSecurity玩明白
@@ -170,3 +170,5 @@ public class MyUserDetails implements UserDetails {
     }
 }
 ```
+
+# 思考题：自己做了 MyUserDetails 和 MyUserDetailsService 两个类之后，框架是怎么去自动调用到的？
