@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+
+
+
+
+<html class="theme-next mist" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="把SpringSecurity玩明白,">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2">
+
+
+
+
+
+
+<meta name="description" content="接上回理论，现在要实现将前端页面上传来的用户名密码跟从数据库里取到的值作比较，以判定登录是否成功。">
+<meta name="keywords" content="把SpringSecurity玩明白">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Security03-连接数据库验证用户名密码-实践-思考题未完成">
+<meta property="og:url" content="https://sagittaria.github.io/2021/12/16/muscle03-2/index.html">
+<meta property="og:site_name" content="盡歡">
+<meta property="og:description" content="接上回理论，现在要实现将前端页面上传来的用户名密码跟从数据库里取到的值作比较，以判定登录是否成功。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2021-12-16T09:27:00.218Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Security03-连接数据库验证用户名密码-实践-思考题未完成">
+<meta name="twitter:description" content="接上回理论，现在要实现将前端页面上传来的用户名密码跟从数据库里取到的值作比较，以判定登录是否成功。">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: false,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://sagittaria.github.io/2021/12/16/muscle03-2/">
+
+
+
+
+
+  <title>Security03-连接数据库验证用户名密码-实践-思考题未完成 | 盡歡</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">盡歡</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">- 無貪 , 無執 -</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://sagittaria.github.io/2021/12/16/muscle03-2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="盐生">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="盡歡">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Security03-连接数据库验证用户名密码-实践-思考题未完成</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2021-12-16T09:39:52+08:00">
+                2021-12-16
+              </time>
+            
+
+            
+              <span class="post-meta-divider">|</span>
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-check-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">更新于</span>
+              
+              <time title="更新于" itemprop="dateModified" datetime="2021-12-16T17:27:00+08:00">
+                2021-12-16
+              </time>
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/不周山/" itemprop="url" rel="index">
+                    <span itemprop="name">不周山</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>接上回理论，现在要实现将前端页面上传来的用户名密码跟从数据库里取到的值作比较，以判定登录是否成功。<br><a id="more"></a></p>
+<h1 id="应用配置文件-application-yml"><a href="#应用配置文件-application-yml" class="headerlink" title="应用配置文件 application.yml"></a>应用配置文件 application.yml</h1><p>加 DataSource 和 JPA，注释掉掉默认的 sean 用户<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">spring:</span><br><span class="line">  application:</span><br><span class="line">    name: muscle</span><br><span class="line"></span><br><span class="line">  datasource:</span><br><span class="line">    url: jdbc:mysql://localhost:3306/muscle</span><br><span class="line">    username: root</span><br><span class="line">    password: root</span><br><span class="line"></span><br><span class="line">  jpa:</span><br><span class="line">    show-sql: true</span><br><span class="line">    hibernate:</span><br><span class="line">      ddl-auto: update</span><br><span class="line">    open-in-view: false</span><br><span class="line"></span><br><span class="line">#  security:</span><br><span class="line">#    user:</span><br><span class="line">#      name: sean</span><br><span class="line">#      password: 123</span><br><span class="line"></span><br><span class="line">server:</span><br><span class="line">  port: 8088</span><br></pre></td></tr></table></figure></p>
+<h1 id="登录成功后的页面-frontpage-html"><a href="#登录成功后的页面-frontpage-html" class="headerlink" title="登录成功后的页面 frontpage.html"></a>登录成功后的页面 frontpage.html</h1><p>增加一个注销登录的&lt;a&gt;标签<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;div&gt;</span><br><span class="line">    hi &lt;span th:text=&quot;$&#123;name&#125;&quot;&gt;name&lt;/span&gt;, welcome to the real world. Now, you can click to</span><br><span class="line">    &lt;a th:href=&quot;@&#123;/logout&#125;&quot;&gt;log out&lt;/a&gt;</span><br><span class="line">&lt;/div&gt;</span><br></pre></td></tr></table></figure></p>
+<h1 id="实体类-User-及其仓库-UserRepository"><a href="#实体类-User-及其仓库-UserRepository" class="headerlink" title="实体类 User 及其仓库 UserRepository"></a>实体类 User 及其仓库 UserRepository</h1><p>User必须有id、username、password，UserRepository 加一个findByUsername方法，UserDetailsService要用<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">@Data</span><br><span class="line">@Entity</span><br><span class="line">@Table(name=&quot;t_user&quot;)</span><br><span class="line">public class User &#123;</span><br><span class="line">    @Id</span><br><span class="line">    @GeneratedValue(strategy = GenerationType.IDENTITY)</span><br><span class="line">    private int id;</span><br><span class="line"></span><br><span class="line">    private String username;</span><br><span class="line">    private String password;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// -------------------------------------------------------</span><br><span class="line"></span><br><span class="line">public interface UserRepository extends JpaRepository&lt;User, Long&gt; &#123;</span><br><span class="line">    User findByUsername(String username);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>创建用户：往 t_user 表里插一条数据<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">insert into t_user(username, password) values(&apos;sean&apos;, &apos;&#123;noop&#125;123&apos;);</span><br></pre></td></tr></table></figure></p>
+<p>关于上面password里{noop}的说明，见文档 <a href="https://docs.spring.io/spring-security/reference/features/authentication/password-storage.html#authentication-password-storage-dpe-format" target="_blank" rel="noopener">Password Storage Format</a></p>
+<p>简单理解，密码前加了{noop}表示明文存储，密码比对时会由 NoOpPasswordEncoder 来处理。这里不去理解也行，一般情况下这么使用 BCryptPasswordEncoder：</p>
+<ol>
+<li>直接存秘文，前面不用加{noop}或者{bcrypt}。随便写个main方法执行下，获取秘文</li>
+<li>String raw = “muscle”; System.out.println(new BCryptPasswordEncoder().encode(raw));</li>
+<li>更新下数据库里的密码</li>
+<li>update t_user set password=’$2a$10$aUwJfJWSUSDHg08TDg5mc.E3pk82dMcXdAVHY5yhPvS9sVvyR68HW’ where username=’sean’;</li>
+<li>暴露一个 BCryptPasswordEncoder Bean，见下一节</li>
+</ol>
+<h1 id="安全配置类-MySecurityConfig"><a href="#安全配置类-MySecurityConfig" class="headerlink" title="安全配置类 MySecurityConfig"></a>安全配置类 MySecurityConfig</h1><p>因为页面上是点击个&lt;a&gt;注销登录（普通get请求），而 <a href="https://docs.spring.io/spring-security/reference/servlet/authentication/logout.html" target="_blank" rel="noopener">If CSRF protection is enabled (default), then the request must also be a POST.</a> 所以在configure方法中增加一条设置：关闭CSRF。</p>
+<p>另外在这个类里暴露一个BCryptPasswordEncoder Bean，来指定具体的PasswordEncoder。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">@EnableWebSecurity</span><br><span class="line">public class MySecurityConfig extends WebSecurityConfigurerAdapter &#123;</span><br><span class="line">    protected void configure(HttpSecurity http) throws Exception &#123;</span><br><span class="line">        http.csrf().disable(); // 将csrf关掉</span><br><span class="line">        // 其他设置不变...</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Bean</span><br><span class="line">    public BCryptPasswordEncoder bCryptPasswordEncoder() &#123;</span><br><span class="line">        return new BCryptPasswordEncoder();</span><br><span class="line">    &#125; // 暴露一个Bean，以令 BCryptPasswordEncoder 来处理前端传入的密码，将其encode后与数据库中存的值比较</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="MyUserDetailsService"><a href="#MyUserDetailsService" class="headerlink" title="MyUserDetailsService"></a>MyUserDetailsService</h2><p>打 @Service 注解是为了让它自动注入。实现 UserDetailsService 接口要实现 loadUserByUsername 方法，如果能按用户名找到就包装成 UserDetails 返回出去，如果找不到就抛出个 UsernameNotFoundException<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">@Service</span><br><span class="line">public class MyUserDetailsService implements UserDetailsService &#123;</span><br><span class="line"></span><br><span class="line">    final UserRepository userRepository;</span><br><span class="line"></span><br><span class="line">    @Autowired</span><br><span class="line">    public MyUserDetailsService(UserRepository userRepository) &#123;</span><br><span class="line">        this.userRepository = userRepository;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException &#123;</span><br><span class="line">        User user = userRepository.findByUsername(username);</span><br><span class="line">        if (user != null) &#123;</span><br><span class="line">            return new MyUserDetails(user);</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            throw new UsernameNotFoundException(&quot;invalid username or password&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="MyUserDetails"><a href="#MyUserDetails" class="headerlink" title="MyUserDetails"></a>MyUserDetails</h2><p>DaoAuthenticationProvider 里能见到一个 org.springframework.security.core.userdetails.UserDetails 接口，同包下面有一个实现 org.springframework.security.core.userdetails.User。就是这个 User 类里定义了用户名字段叫 username，密码字段叫 password。自制 tech.demons.muscle.entity.User 实体类和 MyUserDetails 类时都参考了它。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">public class MyUserDetails implements UserDetails &#123;</span><br><span class="line">    // 参考来源：org.springframework.security.core.userdetails.User(which implements UserDetails)</span><br><span class="line">    </span><br><span class="line">    final private User user;</span><br><span class="line"></span><br><span class="line">    public MyUserDetails(User user) &#123;</span><br><span class="line">        this.user = user;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public Collection&lt;? extends GrantedAuthority&gt; getAuthorities() &#123;</span><br><span class="line">        return null;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String getPassword() &#123;</span><br><span class="line">        return user.getPassword();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String getUsername() &#123;</span><br><span class="line">        return user.getUsername();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public boolean isAccountNonExpired() &#123;</span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public boolean isAccountNonLocked() &#123;</span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public boolean isCredentialsNonExpired() &#123;</span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public boolean isEnabled() &#123;</span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1 id="思考题：自己做了-MyUserDetails-和-MyUserDetailsService-两个类之后，框架是怎么去自动调用到的？"><a href="#思考题：自己做了-MyUserDetails-和-MyUserDetailsService-两个类之后，框架是怎么去自动调用到的？" class="headerlink" title="思考题：自己做了 MyUserDetails 和 MyUserDetailsService 两个类之后，框架是怎么去自动调用到的？"></a>思考题：自己做了 MyUserDetails 和 MyUserDetailsService 两个类之后，框架是怎么去自动调用到的？</h1>
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/把SpringSecurity玩明白/" rel="tag"># 把SpringSecurity玩明白</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/12/14/tax02/" rel="next" title="个税算法">
+                <i class="fa fa-chevron-left"></i> 个税算法
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/12/17/muscle04/" rel="prev" title="Security04-鉴权架构">
+                Security04-鉴权架构 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/images/avatar.gif" alt="盐生">
+          <p class="site-author-name" itemprop="name">盐生</p>
+           
+              <p class="site-description motion-element" itemprop="description">未来不可知</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">30</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">10</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#应用配置文件-application-yml"><span class="nav-number">1.</span> <span class="nav-text">应用配置文件 application.yml</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#登录成功后的页面-frontpage-html"><span class="nav-number">2.</span> <span class="nav-text">登录成功后的页面 frontpage.html</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#实体类-User-及其仓库-UserRepository"><span class="nav-number">3.</span> <span class="nav-text">实体类 User 及其仓库 UserRepository</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#安全配置类-MySecurityConfig"><span class="nav-number">4.</span> <span class="nav-text">安全配置类 MySecurityConfig</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#MyUserDetailsService"><span class="nav-number">4.1.</span> <span class="nav-text">MyUserDetailsService</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MyUserDetails"><span class="nav-number">4.2.</span> <span class="nav-text">MyUserDetails</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#思考题：自己做了-MyUserDetails-和-MyUserDetailsService-两个类之后，框架是怎么去自动调用到的？"><span class="nav-number">5.</span> <span class="nav-text">思考题：自己做了 MyUserDetails 和 MyUserDetailsService 两个类之后，框架是怎么去自动调用到的？</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">盐生</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

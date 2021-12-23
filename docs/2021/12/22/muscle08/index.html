@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+
+
+
+
+<html class="theme-next mist" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="把SpringSecurity玩明白,">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2">
+
+
+
+
+
+
+<meta name="description" content="本系列终结篇，讲每个请求过来先走token认证。当然还有一些值得优化的点，但我不打算继续，因为接下来要去改造jaeger。这篇做完我顺便重新感受到了一点前后端分离的意义，就是让后端纯粹地做接口，省得处理白名单什么的乱七八糟的事情。">
+<meta name="keywords" content="把SpringSecurity玩明白">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Security08-token认证">
+<meta property="og:url" content="https://sagittaria.github.io/2021/12/22/muscle08/index.html">
+<meta property="og:site_name" content="盡歡">
+<meta property="og:description" content="本系列终结篇，讲每个请求过来先走token认证。当然还有一些值得优化的点，但我不打算继续，因为接下来要去改造jaeger。这篇做完我顺便重新感受到了一点前后端分离的意义，就是让后端纯粹地做接口，省得处理白名单什么的乱七八糟的事情。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://sagittaria.github.io/2021/12/22/muscle08/config.jpg">
+<meta property="og:updated_time" content="2021-12-22T13:12:32.965Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Security08-token认证">
+<meta name="twitter:description" content="本系列终结篇，讲每个请求过来先走token认证。当然还有一些值得优化的点，但我不打算继续，因为接下来要去改造jaeger。这篇做完我顺便重新感受到了一点前后端分离的意义，就是让后端纯粹地做接口，省得处理白名单什么的乱七八糟的事情。">
+<meta name="twitter:image" content="https://sagittaria.github.io/2021/12/22/muscle08/config.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: false,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://sagittaria.github.io/2021/12/22/muscle08/">
+
+
+
+
+
+  <title>Security08-token认证 | 盡歡</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">盡歡</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">- 無貪 , 無執 -</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://sagittaria.github.io/2021/12/22/muscle08/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="盐生">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="盡歡">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Security08-token认证</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2021-12-22T19:27:10+08:00">
+                2021-12-22
+              </time>
+            
+
+            
+              <span class="post-meta-divider">|</span>
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-check-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">更新于</span>
+              
+              <time title="更新于" itemprop="dateModified" datetime="2021-12-22T21:12:32+08:00">
+                2021-12-22
+              </time>
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/不周山/" itemprop="url" rel="index">
+                    <span itemprop="name">不周山</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>本系列终结篇，讲每个请求过来先走token认证。当然还有一些值得优化的点，但我不打算继续，因为接下来要去改造jaeger。这篇做完我顺便重新感受到了一点前后端分离的意义，就是让后端纯粹地做接口，省得处理白名单什么的乱七八糟的事情。<br><a id="more"></a></p>
+<p>前端页面上加一块内容就是点击按钮发送请求，并用div展示响应结果，新增代码：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line"><span class="comment">&lt;!----&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">input</span> <span class="attr">v-model</span>=<span class="string">"url"</span> /&gt;</span><span class="tag">&lt;<span class="name">button</span> @<span class="attr">click</span>=<span class="string">"call"</span>&gt;</span>call<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span>&gt;</span>&#123;&#123;res&#125;&#125;<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="comment">&lt;!----&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span></span><br><span class="line">// ...</span><br><span class="line">  call() &#123;</span><br><span class="line">    this.res = null</span><br><span class="line">    http.get(this.url).then((&#123;data&#125;) =&gt; &#123;</span><br><span class="line">      this.res = data</span><br><span class="line">    &#125;)</span><br><span class="line">  &#125;,</span><br><span class="line">// ...</span><br><span class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>后端要稍微复杂点，结合代码来讲，并且整理一些优化的点和值得记忆的经验。</p>
+<h1 id="MySecurityConfig"><a href="#MySecurityConfig" class="headerlink" title="MySecurityConfig"></a>MySecurityConfig</h1><ol>
+<li>配置myAuthenticationEntryPoint，当接到的请求是需要登录而未登录的话，由它回复响应。其实AuthenticationEntryPoint本义是用于“发起”一个认证，如默认实现中做的事情是重定向到登录页。</li>
+<li>配置myAccessDeniedHandler，用于鉴权结果为“无权操作”时给出响应。</li>
+<li>往过滤器链里加一个自定义的jwtAuthenticationFilter，执行token认证。</li>
+<li>额外发现，跨域配置必须 setAllowedHeaders 也左上，不然如果请求里带了自定义 header 会被拦掉。但我想如果用 Authorization 这个头的话可能不需要配这条。</li>
+</ol>
+<p><img src="config.jpg" alt="配置类"></p>
+<h2 id="myAuthenticationEntryPoint"><a href="#myAuthenticationEntryPoint" class="headerlink" title="myAuthenticationEntryPoint"></a>myAuthenticationEntryPoint</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyAuthenticationEntryPoint</span> <span class="keyword">implements</span> <span class="title">AuthenticationEntryPoint</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">commence</span><span class="params">(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)</span> <span class="keyword">throws</span> IOException, ServletException </span>&#123;</span><br><span class="line">        PrintWriter out = <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            response.setCharacterEncoding(<span class="string">"UTF-8"</span>);</span><br><span class="line">            response.setContentType(<span class="string">"application/json; charset=utf-8"</span>);</span><br><span class="line">            out = response.getWriter();</span><br><span class="line">            out.write(<span class="string">"&#123;\"error\": \"MyAuthenticationEntryPoint-尚未登录\", \"msg\": \""</span>+ authException.getMessage() +<span class="string">"\"&#125;"</span>);</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (out != <span class="keyword">null</span>) &#123;</span><br><span class="line">                out.flush();</span><br><span class="line">                out.close();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="myAccessDeniedHandler"><a href="#myAccessDeniedHandler" class="headerlink" title="myAccessDeniedHandler"></a>myAccessDeniedHandler</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyAccessDeniedHandler</span> <span class="keyword">implements</span> <span class="title">AccessDeniedHandler</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handle</span><span class="params">(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException)</span> <span class="keyword">throws</span> IOException, ServletException </span>&#123;</span><br><span class="line">        PrintWriter out = <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            response.setCharacterEncoding(<span class="string">"UTF-8"</span>);</span><br><span class="line">            response.setContentType(<span class="string">"application/json; charset=utf-8"</span>);</span><br><span class="line">            out = response.getWriter();</span><br><span class="line">            out.write(<span class="string">"&#123;\"error\": \"MyAccessDeniedHandler-权限不足\", \"msg\": \""</span>+ accessDeniedException.getMessage() +<span class="string">"\"&#125;"</span>);</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (out != <span class="keyword">null</span>) &#123;</span><br><span class="line">                out.flush();</span><br><span class="line">                out.close();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="jwtAuthenticationFilter"><a href="#jwtAuthenticationFilter" class="headerlink" title="jwtAuthenticationFilter"></a>jwtAuthenticationFilter</h2><p>这里有四点可说：1.改用Authorization这个头来放token值；2.给UserEntity增加authorities列，MyUserDetails修改getAuthorities实现为this.user.getAuthorities().stream()…；3.异常捕获那里可以改为捕获所有异常，再AuthenticationException(e.getMessage())都做成AuthExr让myAuthenticationEntryPoint处理；</p>
+<p>第4点单独分开来说：jaeger里不再使用WrappedRequest，目前本来就用不着，控制器里如果需要获取用户信息可以从 SecurityContext 里取得。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">JwtAuthenticationFilter</span> <span class="keyword">extends</span> <span class="title">OncePerRequestFilter</span> </span>&#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doFilterInternal</span><span class="params">(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)</span> <span class="keyword">throws</span> ServletException, IOException </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            String token = request.getHeader(<span class="string">"token"</span>);</span><br><span class="line">            <span class="keyword">if</span> (token == <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> BadCredentialsException(<span class="string">"没token，就当你没登录过"</span>);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                User user = userRepository.findByUsername(token);</span><br><span class="line">                List&lt;UserRole&gt; userRoleList = userRoleRepository.findAllByUserId(user.getId());</span><br><span class="line">                List&lt;Long&gt; roleIds = userRoleList.stream().map(UserRole::getRoleId).collect(Collectors.toList());</span><br><span class="line">                List&lt;Role&gt; roleList = roleRepository.findAllById(roleIds);</span><br><span class="line">                List&lt;RolePermission&gt; rolePermissionList = rolePermissionRepository.findAllByRoleIdIn(roleIds);</span><br><span class="line">                List&lt;Long&gt; permissionIds = rolePermissionList.stream().map(RolePermission::getPermissionId).collect(Collectors.toList());</span><br><span class="line">                List&lt;Permission&gt; permissionList = permissionRepository.findAllById(permissionIds);</span><br><span class="line">                MyUserDetails md = <span class="keyword">new</span> MyUserDetails(user, roleList, permissionList);</span><br><span class="line">                SecurityContext context = SecurityContextHolder.createEmptyContext();</span><br><span class="line">                context.setAuthentication(<span class="keyword">new</span> JwtAuthenticationToken(md, md.getAuthorities()));</span><br><span class="line">                SecurityContextHolder.setContext(context);</span><br><span class="line">            &#125;</span><br><span class="line">            filterChain.doFilter(request, response);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (AuthenticationException e) &#123;</span><br><span class="line">            SecurityContextHolder.clearContext();</span><br><span class="line">            <span class="keyword">this</span>.myAuthenticationEntryPoint.commence(request, response, e);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="JwtAuthenticationToken"><a href="#JwtAuthenticationToken" class="headerlink" title="JwtAuthenticationToken"></a>JwtAuthenticationToken</h3><p>这个参考 TestingAuthenticationToken，其他没什么要说的。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">JwtAuthenticationToken</span> <span class="keyword">extends</span> <span class="title">AbstractAuthenticationToken</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Object principal;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">JwtAuthenticationToken</span><span class="params">(Object principal, Collection&lt;? extends GrantedAuthority&gt; authorities)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(authorities);</span><br><span class="line">        <span class="keyword">this</span>.principal = principal;</span><br><span class="line">        <span class="keyword">super</span>.setAuthenticated(<span class="keyword">true</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Object <span class="title">getCredentials</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Object <span class="title">getPrincipal</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.principal;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="PermissionController"><a href="#PermissionController" class="headerlink" title="PermissionController"></a>PermissionController</h2><p>这里多放了一个只要登录就能访问的接口，测试用。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@GetMapping</span>(<span class="string">"/permission/saye"</span>)</span><br><span class="line"><span class="function"><span class="keyword">public</span> String <span class="title">play</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">"尽情撒野"</span>; <span class="comment">// 只要登录了就行</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1 id="代码归档"><a href="#代码归档" class="headerlink" title="代码归档"></a>代码归档</h1><p><a href="code.zip">点击下载</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/把SpringSecurity玩明白/" rel="tag"># 把SpringSecurity玩明白</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/12/21/muscle07/" rel="next" title="Security07-前后端分离架构的登录">
+                <i class="fa fa-chevron-left"></i> Security07-前后端分离架构的登录
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/images/avatar.gif" alt="盐生">
+          <p class="site-author-name" itemprop="name">盐生</p>
+           
+              <p class="site-description motion-element" itemprop="description">未来不可知</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">30</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">10</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#MySecurityConfig"><span class="nav-number">1.</span> <span class="nav-text">MySecurityConfig</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#myAuthenticationEntryPoint"><span class="nav-number">1.1.</span> <span class="nav-text">myAuthenticationEntryPoint</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#myAccessDeniedHandler"><span class="nav-number">1.2.</span> <span class="nav-text">myAccessDeniedHandler</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#jwtAuthenticationFilter"><span class="nav-number">1.3.</span> <span class="nav-text">jwtAuthenticationFilter</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#JwtAuthenticationToken"><span class="nav-number">1.3.1.</span> <span class="nav-text">JwtAuthenticationToken</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PermissionController"><span class="nav-number">1.4.</span> <span class="nav-text">PermissionController</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#代码归档"><span class="nav-number">2.</span> <span class="nav-text">代码归档</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">盐生</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
